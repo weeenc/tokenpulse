@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { intervalSeconds, launchAgentXml, windowsTaskCommand } from '../src/scheduler/index.js';
+import {
+  intervalSeconds,
+  launchAgentXml,
+  windowsLauncherCommand,
+  windowsLauncherScript,
+  windowsTaskCommand,
+} from '../src/scheduler/index.js';
 
 describe('autosubmit interval', () => {
   it('parses minutes and hours', () => {
@@ -17,6 +23,24 @@ describe('autosubmit interval', () => {
       ),
     ).toBe(
       '"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse\\dist\\cli.js" sync',
+    );
+  });
+  it('runs Windows sync through a hidden WScript launcher', () => {
+    expect(
+      windowsLauncherScript(
+        'C:\\Program Files\\nodejs\\node.exe',
+        'C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse\\dist\\cli.js',
+      ),
+    ).toContain(
+      'exitCode = shell.Run("""C:\\Program Files\\nodejs\\node.exe"" ""C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse\\dist\\cli.js"" sync", 0, True)',
+    );
+    expect(
+      windowsLauncherCommand(
+        'C:\\Windows\\System32\\wscript.exe',
+        'C:\\Users\\Wenc Chao\\AppData\\Roaming\\tokenpulse-agent\\autosubmit.vbs',
+      ),
+    ).toBe(
+      '"C:\\Windows\\System32\\wscript.exe" //B //NoLogo "C:\\Users\\Wenc Chao\\AppData\\Roaming\\tokenpulse-agent\\autosubmit.vbs"',
     );
   });
   it('escapes launchd XML paths', () => {
