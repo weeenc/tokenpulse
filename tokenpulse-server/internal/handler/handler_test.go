@@ -2,11 +2,43 @@
 package handler
 
 import (
+	"crypto/tls"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 )
+
+// TestRequestIsSecure 验证 Cookie 安全属性跟随客户端实际使用的协议。
+func TestRequestIsSecure(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name           string
+		forwardedProto string
+		tls            bool
+		want           bool
+	}{
+		{name: "plain HTTP"},
+		{name: "proxy HTTPS", forwardedProto: "https", want: true},
+		{name: "direct HTTPS", tls: true, want: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			context, _ := gin.CreateTestContext(httptest.NewRecorder())
+			context.Request = httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", nil)
+			if test.forwardedProto != "" {
+				context.Request.Header.Set("X-Forwarded-Proto", test.forwardedProto)
+			}
+			if test.tls {
+				context.Request.TLS = &tls.ConnectionState{}
+			}
+			if got := requestIsSecure(context); got != test.want {
+				t.Fatalf("requestIsSecure() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
 
 // statisticsContext 创建带指定查询字符串的 Gin 测试上下文。
 func statisticsContext(rawQuery string) (*gin.Context, *httptest.ResponseRecorder) {

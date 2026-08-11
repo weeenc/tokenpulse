@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -78,7 +79,7 @@ func CORS(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 		_, originAllowed := allowed[origin]
-		if origin != "" && !originAllowed {
+		if origin != "" && !originAllowed && !sameOrigin(c, origin) {
 			api.Error(c, http.StatusForbidden, 40302, "origin is not allowed")
 			return
 		}
@@ -96,6 +97,38 @@ func CORS(allowedOrigins []string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+// sameOrigin 判断浏览器来源是否与当前反向代理入口一致；同源请求无需进入跨域白名单。
+func sameOrigin(c *gin.Context, rawOrigin string) bool {
+	origin, err := url.Parse(rawOrigin)
+	if err != nil || origin.Scheme == "" || origin.Host == "" || origin.Path != "" {
+		return false
+	}
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	if forwarded := strings.TrimSpace(strings.Split(c.GetHeader("X-Forwarded-Proto"), ",")[0]); forwarded != "" {
+		scheme = forwarded
+	}
+	requestOrigin, err := url.Parse(scheme + "://" + c.Request.Host)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(origin.Scheme, requestOrigin.Scheme) &&
+		strings.EqualFold(origin.Hostname(), requestOrigin.Hostname()) &&
+		originPort(origin) == originPort(requestOrigin)
+}
+
+func originPort(value *url.URL) string {
+	if value.Port() != "" {
+		return value.Port()
+	}
+	if strings.EqualFold(value.Scheme, "https") {
+		return "443"
+	}
+	return "80"
 }
 
 // CSRF 使用 Double Submit Cookie 模式比较 Cookie 与请求头中的随机令牌。
