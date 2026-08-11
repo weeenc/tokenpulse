@@ -1,0 +1,10 @@
+.DS_Store
+.env
+*.log
+node_modules/
+dist/
+coverage/
+.agents/
+tokenpulse-agent/data/
+tokenpulse-web/.vite/
+tokenpulse-server/tokenpulse-server

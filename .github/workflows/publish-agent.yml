@@ -1,0 +1,46 @@
+name: Publish agent
+
+on:
+  push:
+    tags: ['agent-v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: SemVer version to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --workspace tokenpulse-agent
+      - run: npm test --workspace tokenpulse-agent
+      - name: Prepare package metadata
+        shell: bash
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            VERSION="${MANUAL_VERSION}"
+          else
+            VERSION="${GITHUB_REF_NAME#agent-v}"
+          fi
+          npm version "${VERSION}" --workspace tokenpulse-agent --no-git-tag-version
+          npm pkg set repository.type=git repository.url="git+https://github.com/${GITHUB_REPOSITORY}.git" --workspace tokenpulse-agent
+          npm pkg set bugs.url="https://github.com/${GITHUB_REPOSITORY}/issues" homepage="https://github.com/${GITHUB_REPOSITORY}#readme" --workspace tokenpulse-agent
+      - run: npm publish --workspace tokenpulse-agent --access public --provenance

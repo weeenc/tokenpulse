@@ -1,0 +1,536 @@
+openapi: 3.1.0
+info:
+  title: TokenPulse API
+  version: 0.1.0
+  description: API for the TokenPulse web application and local collection agent.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://tokenpulse.example.com
+  - url: http://localhost:8080
+tags:
+  - name: Auth
+  - name: Device authorization
+  - name: Devices
+  - name: Usage
+  - name: Statistics
+paths:
+  /health:
+    get:
+      summary: Check service and database health
+      responses:
+        '200':
+          description: Healthy
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a user and start a browser session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/User'
+        '400':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Start a browser session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identity, password]
+              properties:
+                identity: { type: string, maxLength: 128 }
+                password: { type: string, maxLength: 128 }
+      responses:
+        '200':
+          $ref: '#/components/responses/User'
+        '401':
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate the refresh session and access token
+      security:
+        - refreshCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200': { description: Session refreshed }
+        '401':
+          $ref: '#/components/responses/Error'
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the refresh session and clear cookies
+      security:
+        - refreshCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200': { description: Logged out }
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the current user
+      security:
+        - accessCookie: []
+      responses:
+        '200':
+          $ref: '#/components/responses/User'
+        '401':
+          $ref: '#/components/responses/Error'
+  /api/v1/device-auth/request:
+    post:
+      tags: [Device authorization]
+      summary: Begin the agent device authorization flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceAuthRequest'
+      responses:
+        '201':
+          description: Device authorization codes
+        '429':
+          $ref: '#/components/responses/Error'
+  /api/v1/device-auth/token:
+    post:
+      tags: [Device authorization]
+      summary: Poll for an approved device credential
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceCode]
+              properties:
+                deviceCode: { type: string }
+      responses:
+        '200': { description: Opaque device token and device identity }
+        '400':
+          $ref: '#/components/responses/Error'
+  /api/v1/device-auth/info/{userCode}:
+    get:
+      tags: [Device authorization]
+      summary: Get a pending authorization request
+      security:
+        - accessCookie: []
+      parameters:
+        - name: userCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Pending request and reusable devices }
+        '404':
+          $ref: '#/components/responses/Error'
+        '410':
+          $ref: '#/components/responses/Error'
+  /api/v1/device-auth/approve:
+    post:
+      tags: [Device authorization]
+      summary: Approve a pending request
+      security:
+        - accessCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userCode]
+              properties:
+                userCode: { type: string }
+                targetDeviceId: { type: integer, format: uint64, nullable: true }
+      responses:
+        '200': { description: Approved }
+        '409':
+          $ref: '#/components/responses/Error'
+  /api/v1/device-auth/deny:
+    post:
+      tags: [Device authorization]
+      summary: Deny a pending request
+      security:
+        - accessCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userCode]
+              properties:
+                userCode: { type: string }
+      responses:
+        '200': { description: Denied }
+  /api/v1/devices:
+    get:
+      tags: [Devices]
+      summary: List the current user's logical devices
+      security:
+        - accessCookie: []
+      responses:
+        '200':
+          description: Device list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Device' }
+  /api/v1/devices/{id}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceID'
+    get:
+      tags: [Devices]
+      summary: Get a logical device
+      security:
+        - accessCookie: []
+      responses:
+        '200': { description: Device }
+    patch:
+      tags: [Devices]
+      summary: Rename a logical device
+      security:
+        - accessCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/CSRF'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceName]
+              properties:
+                deviceName: { type: string, maxLength: 128 }
+      responses:
+        '200': { description: Updated }
+  /api/v1/devices/{id}/revoke:
+    post:
+      tags: [Devices]
+      summary: Revoke a logical device
+      security:
+        - accessCookie: []
+          csrfCookie: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceID'
+        - $ref: '#/components/parameters/CSRF'
+      responses:
+        '200': { description: Revoked }
+  /api/v1/devices/me:
+    get:
+      tags: [Devices]
+      summary: Get the authenticated agent identity
+      security:
+        - deviceToken: []
+      responses:
+        '200': { description: Device and account identity }
+  /api/v1/devices/heartbeat:
+    post:
+      tags: [Devices]
+      summary: Update agent activity time
+      security:
+        - deviceToken: []
+      responses:
+        '200': { description: Server time }
+  /api/v1/agent/config:
+    get:
+      tags: [Devices]
+      summary: Get agent synchronization limits
+      security:
+        - deviceToken: []
+      responses:
+        '200': { description: Agent configuration }
+  /api/v1/usage/batch:
+    post:
+      tags: [Usage]
+      summary: Upload an idempotent batch of usage metadata
+      security:
+        - deviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  minItems: 1
+                  maxItems: 500
+                  items: { $ref: '#/components/schemas/UsageEvent' }
+      responses:
+        '200': { description: Received, inserted, and duplicate counts }
+        '400':
+          $ref: '#/components/responses/Error'
+  /api/v1/statistics/summary:
+    get:
+      tags: [Statistics]
+      summary: Get current token totals and estimated cost
+      security:
+        - accessCookie: []
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Summary }
+  /api/v1/statistics/trend:
+    get:
+      tags: [Statistics]
+      summary: Get daily usage trend
+      security:
+        - accessCookie: []
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Daily totals }
+  /api/v1/statistics/by-device:
+    get:
+      tags: [Statistics]
+      summary: Group usage by device
+      security: [{ accessCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Grouped totals }
+  /api/v1/statistics/by-source:
+    get:
+      tags: [Statistics]
+      summary: Group usage by collector source
+      security: [{ accessCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Grouped totals }
+  /api/v1/statistics/by-model:
+    get:
+      tags: [Statistics]
+      summary: Group usage by model
+      security: [{ accessCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Grouped totals }
+  /api/v1/statistics/recent:
+    get:
+      tags: [Statistics]
+      summary: Get recent usage events
+      security: [{ accessCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/SourceFilter'
+        - $ref: '#/components/parameters/ModelFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200': { description: Recent usage metadata }
+components:
+  securitySchemes:
+    accessCookie:
+      type: apiKey
+      in: cookie
+      name: tp_access
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: tp_refresh
+    csrfCookie:
+      type: apiKey
+      in: cookie
+      name: tp_csrf
+    deviceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque dt_ token
+  parameters:
+    CSRF:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      schema: { type: string }
+    DeviceID:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: uint64 }
+    StartTime:
+      name: startTime
+      in: query
+      schema: { type: string, format: date-time }
+    EndTime:
+      name: endTime
+      in: query
+      schema: { type: string, format: date-time }
+    DeviceFilter:
+      name: deviceId
+      in: query
+      schema: { type: integer, format: uint64 }
+    SourceFilter:
+      name: source
+      in: query
+      schema: { type: string, maxLength: 64 }
+    ModelFilter:
+      name: model
+      in: query
+      schema: { type: string, maxLength: 128 }
+    TimezoneOffset:
+      name: timezoneOffsetMinutes
+      in: query
+      description: JavaScript Date.getTimezoneOffset value (UTC minus local time).
+      schema: { type: integer, minimum: -840, maximum: 840, default: 0 }
+  schemas:
+    Envelope:
+      type: object
+      required: [code, message, data]
+      properties:
+        code: { type: integer, example: 0 }
+        message: { type: string, example: success }
+        data: {}
+    User:
+      type: object
+      required: [id, username, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer, format: uint64 }
+        username: { type: string }
+        email: { type: string, format: email }
+        status: { type: string, enum: [ACTIVE, DISABLED] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    RegisterRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 64 }
+        email: { type: string, format: email, maxLength: 128 }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    DeviceAuthRequest:
+      type: object
+      required: [deviceName, platform, arch, installationId]
+      properties:
+        deviceName: { type: string, maxLength: 128 }
+        platform: { type: string, maxLength: 32 }
+        arch: { type: string, maxLength: 32 }
+        agentVersion: { type: string, maxLength: 32 }
+        installationId: { type: string, format: uuid }
+    Device:
+      type: object
+      required: [id, deviceId, deviceName, platform, arch, status]
+      properties:
+        id: { type: integer, format: uint64 }
+        deviceId: { type: string, format: uuid }
+        deviceName: { type: string }
+        platform: { type: string }
+        arch: { type: string }
+        agentVersion: { type: string }
+        status: { type: string, enum: [ACTIVE, REVOKED] }
+        lastActiveAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    UsageEvent:
+      type: object
+      required:
+        [
+          eventId,
+          source,
+          inputTokens,
+          outputTokens,
+          cachedInputTokens,
+          reasoningTokens,
+          totalTokens,
+          occurredAt,
+        ]
+      properties:
+        eventId: { type: string, pattern: '^[a-fA-F0-9]{64}$' }
+        source: { type: string, maxLength: 64 }
+        model: { type: string, maxLength: 128, nullable: true }
+        sessionId: { type: string, maxLength: 255, nullable: true }
+        messageId: { type: string, maxLength: 255, nullable: true }
+        inputTokens: { type: integer, format: uint64 }
+        outputTokens: { type: integer, format: uint64 }
+        cachedInputTokens: { type: integer, format: uint64 }
+        reasoningTokens: { type: integer, format: uint64 }
+        totalTokens:
+          type: integer
+          format: uint64
+          description: Source-reported total. It may be non-zero while all breakdown fields are zero when the source exposes only a verified total.
+        occurredAt: { type: string, format: date-time }
+  responses:
+    User:
+      description: User envelope
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Envelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Envelope'
+              - type: object
+                properties:
+                  data: { type: 'null' }

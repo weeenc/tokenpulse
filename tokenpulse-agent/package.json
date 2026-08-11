@@ -1,0 +1,56 @@
+{
+  "name": "tokenpulse-agent",
+  "version": "0.1.0",
+  "description": "Cross-platform TokenPulse collection agent",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weeenc/tokenpulse.git",
+    "directory": "tokenpulse-agent"
+  },
+  "bugs": {
+    "url": "https://github.com/weeenc/tokenpulse/issues"
+  },
+  "homepage": "https://github.com/weeenc/tokenpulse/tree/main/tokenpulse-agent#readme",
+  "keywords": [
+    "ai",
+    "token-usage",
+    "codex",
+    "claude-code",
+    "cursor",
+    "developer-tools"
+  ],
+  "type": "module",
+  "bin": {
+    "tokenpulse": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "format:check": "prettier --check src tests package.json tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "commander": "^14.0.0",
+    "open": "^10.2.0",
+    "zod": "^4.0.15"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.2.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
+  }
+}

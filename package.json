@@ -1,0 +1,31 @@
+{
+  "name": "tokenpulse",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "tokenpulse-agent",
+    "tokenpulse-web"
+  ],
+  "scripts": {
+    "build": "npm run build -w tokenpulse-agent && npm run build -w tokenpulse-web",
+    "test": "npm run test -w tokenpulse-agent && npm run test -w tokenpulse-web",
+    "lint": "npm run lint -w tokenpulse-agent && npm run lint -w tokenpulse-web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run lint && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vue/test-utils": "^2.4.11",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.10.0",
+    "globals": "^17.9.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.66.0",
+    "vue-eslint-parser": "^10.4.1"
+  }
+}

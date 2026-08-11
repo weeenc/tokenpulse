@@ -1,0 +1,12 @@
+.git
+.github
+**/.DS_Store
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+deploy/.env
+deploy/certs
+deploy/data
+tokenpulse-agent/data
+tokenpulse-agent/*.db*
