@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Agent 升级后通过同步心跳刷新设备管理中的版本号，无需重新授权设备。
+
 ### Added
 
 - TokenPulse Monorepo：Agent、Go Server、Web、Docker Compose。

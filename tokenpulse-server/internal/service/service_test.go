@@ -132,6 +132,14 @@ func TestDeviceAuthorizationLifecycle(t *testing.T) {
 	if err != nil || identity.DeviceID != result.Device.ID {
 		t.Fatalf("device auth failed: %v", err)
 	}
+	devices := NewDeviceService(db)
+	if err := devices.Heartbeat(*identity, "0.1.1"); err != nil {
+		t.Fatal(err)
+	}
+	listed, err := devices.List(owner.ID)
+	if err != nil || len(listed) != 1 || listed[0].AgentVersion != "0.1.1" {
+		t.Fatalf("heartbeat did not refresh agent version: %+v %v", listed, err)
+	}
 }
 
 // TestDeviceAuthorizationDenyAndExpire 验证拒绝和过期状态不会签发设备凭据。

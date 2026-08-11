@@ -40,6 +40,18 @@ describe('API client', () => {
     });
   });
 
+  it('reports the running agent version with its heartbeat', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(200, 0, 'success', {}));
+    vi.stubGlobal('fetch', fetchMock);
+    await new ApiClient('https://tokenpulse.example.com', 'dt_secret').heartbeat('0.1.1');
+    expect(fetchMock.mock.calls[0]?.[0].toString()).toBe(
+      'https://tokenpulse.example.com/api/v1/devices/heartbeat',
+    );
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      agentVersion: '0.1.1',
+    });
+  });
+
   it('does not retry an authentication failure', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response(401, 40102, 'revoked', null));
     vi.stubGlobal('fetch', fetchMock);

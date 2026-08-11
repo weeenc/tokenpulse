@@ -1,6 +1,6 @@
 # TokenPulse
 
-TokenPulse 是一个可自托管的跨平台 AI Coding Token 使用量平台。项目采用 Monorepo，但三个可独立构建和发布的应用均使用提示词中指定的项目名称：
+TokenPulse 是一个可自托管的跨平台 AI Coding Token 使用量平台。项目采用 Monorepo：
 
 ```text
 TokenPulse/

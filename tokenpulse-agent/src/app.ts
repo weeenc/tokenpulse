@@ -10,6 +10,7 @@ import type { FileProgress } from './types/usage.js';
 export interface AppDependencies {
   configStore: ConfigStore;
   credentials: CredentialStore;
+  agentVersion: string;
 }
 
 export async function collect(
@@ -85,7 +86,7 @@ export async function sync(
         throw error;
       }
     }
-    await client.heartbeat();
+    await client.heartbeat(dependencies.agentVersion);
     const current = await dependencies.configStore.loadOrCreate();
     await dependencies.configStore.save({ ...current, lastSync: new Date().toISOString() });
     return { collected: collection.inserted, uploaded, duplicated };
