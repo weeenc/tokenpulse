@@ -341,9 +341,18 @@ func (h *Handler) DeviceMe(c *gin.Context) {
 	api.OK(c, http.StatusOK, data)
 }
 
-// Heartbeat 更新当前设备与安装的最近活动时间。
+// heartbeatRequest 定义 Agent 心跳携带的运行版本；字段可选以兼容旧客户端。
+type heartbeatRequest struct {
+	AgentVersion string `json:"agentVersion" binding:"omitempty,max=32"`
+}
+
+// Heartbeat 更新当前设备与安装的最近活动时间和 Agent 版本。
 func (h *Handler) Heartbeat(c *gin.Context) {
-	if err := h.devices.WithContext(c.Request.Context()).Heartbeat(middleware.DeviceIdentity(c)); err != nil {
+	var request heartbeatRequest
+	if !bind(c, &request) {
+		return
+	}
+	if err := h.devices.WithContext(c.Request.Context()).Heartbeat(middleware.DeviceIdentity(c), request.AgentVersion); err != nil {
 		internal(c, err)
 		return
 	}
@@ -397,7 +406,7 @@ func (h *Handler) UsageBatch(c *gin.Context) {
 		internal(c, err)
 		return
 	}
-	if err := h.devices.WithContext(c.Request.Context()).Heartbeat(middleware.DeviceIdentity(c)); err != nil {
+	if err := h.devices.WithContext(c.Request.Context()).Heartbeat(middleware.DeviceIdentity(c), ""); err != nil {
 		internal(c, err)
 		return
 	}

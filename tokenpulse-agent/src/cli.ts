@@ -16,6 +16,7 @@ const packageJson = JSON.parse(
 const paths = agentPaths();
 const configStore = new ConfigStore(paths);
 const credentials = createCredentialStore(paths);
+const dependencies = { configStore, credentials, agentVersion: packageJson.version };
 const program = new Command();
 
 program
@@ -45,11 +46,7 @@ program
   .command('status')
   .description('Show authentication and synchronization status')
   .action(() =>
-    status(
-      { configStore, credentials },
-      packageJson.version,
-      program.opts<{ server?: string }>().server,
-    ),
+    status(dependencies, packageJson.version, program.opts<{ server?: string }>().server),
   );
 program
   .command('collect')
@@ -65,7 +62,7 @@ program
   .option('--verbose')
   .action(async (options: { verbose?: boolean }) => {
     const result = await sync(
-      { configStore, credentials },
+      dependencies,
       options.verbose,
       program.opts<{ server?: string }>().server,
     );
@@ -93,11 +90,7 @@ autosubmit.command('status').action(async () => {
   console.log((await autosubmitStatus()) ? '✓ Autosubmit enabled' : '✗ Autosubmit disabled');
 });
 autosubmit.command('run').action(async () => {
-  const result = await sync(
-    { configStore, credentials },
-    false,
-    program.opts<{ server?: string }>().server,
-  );
+  const result = await sync(dependencies, false, program.opts<{ server?: string }>().server);
   console.log(`✓ Autosubmit test complete: ${result.uploaded} uploaded.`);
 });
 

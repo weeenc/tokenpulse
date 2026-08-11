@@ -137,14 +137,19 @@ func (s *DeviceService) Me(identity DeviceIdentity) (map[string]any, error) {
 	return map[string]any{"deviceId": device.DeviceUUID, "deviceName": device.DeviceName, "installationId": installation.InstallationUUID, "platform": device.Platform, "arch": device.Arch, "agentVersion": installation.AgentVersion, "user": map[string]any{"username": user.Username}}, nil
 }
 
-// Heartbeat 在同一事务中更新逻辑设备和当前安装的最近活动时间。
-func (s *DeviceService) Heartbeat(identity DeviceIdentity) error {
+// Heartbeat 在同一事务中更新逻辑设备和当前安装的最近活动时间，并记录客户端当前版本。
+// agentVersion 为空时保持原版本，兼容尚未上报版本的旧客户端。
+func (s *DeviceService) Heartbeat(identity DeviceIdentity, agentVersion string) error {
 	now := time.Now().UTC()
 	return s.store.Transaction(func(transaction *repository.Store) error {
 		tx := transaction.Query()
 		if err := tx.Model(&model.Device{}).Where("id = ? AND status = ?", identity.DeviceID, "ACTIVE").Update("last_active_at", now).Error; err != nil {
 			return err
 		}
-		return tx.Model(&model.DeviceInstallation{}).Where("id = ? AND credential_status = ?", identity.InstallationID, "ACTIVE").Update("last_active_at", now).Error
+		updates := map[string]any{"last_active_at": now}
+		if agentVersion != "" {
+			updates["agent_version"] = agentVersion
+		}
+		return tx.Model(&model.DeviceInstallation{}).Where("id = ? AND credential_status = ?", identity.InstallationID, "ACTIVE").Updates(updates).Error
 	})
 }

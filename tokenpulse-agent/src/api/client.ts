@@ -30,10 +30,10 @@ export class ApiClient {
   async deviceMe() {
     return this.request('/api/v1/devices/me', { method: 'GET', authenticated: true });
   }
-  async heartbeat() {
+  async heartbeat(agentVersion: string) {
     return this.request('/api/v1/devices/heartbeat', {
       method: 'POST',
-      body: {},
+      body: { agentVersion },
       authenticated: true,
     });
   }

@@ -258,9 +258,17 @@ paths:
   /api/v1/devices/heartbeat:
     post:
       tags: [Devices]
-      summary: Update agent activity time
+      summary: Update agent activity time and version
       security:
         - deviceToken: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentVersion: { type: string, maxLength: 32 }
       responses:
         '200': { description: Server time }
   /api/v1/agent/config:
