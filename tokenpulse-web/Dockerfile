@@ -7,7 +7,7 @@ RUN npm ci --workspace tokenpulse-web --include-workspace-root
 COPY tokenpulse-web/ tokenpulse-web/
 RUN npm run build --workspace tokenpulse-web
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY --from=build /app/tokenpulse-web/dist /usr/share/nginx/html
 COPY tokenpulse-web/nginx-site.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
