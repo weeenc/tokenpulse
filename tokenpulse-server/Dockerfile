@@ -7,7 +7,7 @@ COPY tokenpulse-server/ ./
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /tokenpulse-server ./cmd/server
 
 # 运行阶段：仅保留证书、时区、迁移脚本和非 root 用户，缩小攻击面。
-FROM alpine:3.22
+FROM alpine:3.24
 RUN apk add --no-cache ca-certificates tzdata && adduser -D -H tokenpulse
 COPY --from=build /tokenpulse-server /usr/local/bin/tokenpulse-server
 COPY --from=build /src/migrations /app/migrations
