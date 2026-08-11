@@ -3,9 +3,11 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { agentPaths } from '../platform/paths.js';
 
 const execFileAsync = promisify(execFile);
 const label = 'com.tokenusage.agent';
+const windowsLauncherFilename = 'autosubmit.vbs';
 
 export function intervalSeconds(value: string): number {
   const match = /^(\d+)(m|h)$/.exec(value);
@@ -39,6 +41,7 @@ export async function disableAutosubmit(): Promise<void> {
     } catch {
       /* task may not exist */
     }
+    await rm(windowsLauncherPath(), { force: true });
     return;
   }
   throw new Error('Autosubmit is supported on macOS and Windows only.');
@@ -83,7 +86,15 @@ async function enableWindows(seconds: number): Promise<void> {
   const cliPath = process.argv[1];
   if (!cliPath) throw new Error('Unable to determine TokenPulse CLI path.');
   const minutes = Math.max(1, Math.ceil(seconds / 60));
-  const command = windowsTaskCommand(process.execPath, cliPath);
+  const launcherPath = windowsLauncherPath();
+  await mkdir(agentPaths('win32').baseDir, { recursive: true });
+  await writeFile(
+    launcherPath,
+    `\uFEFF${windowsLauncherScript(process.execPath, cliPath)}`,
+    'utf16le',
+  );
+  const wscriptPath = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'wscript.exe');
+  const command = windowsLauncherCommand(wscriptPath, launcherPath);
   await execFileAsync('schtasks', [
     '/Create',
     '/TN',
@@ -104,6 +115,26 @@ function plistPath(): string {
 
 export function windowsTaskCommand(nodePath: string, cliPath: string): string {
   return `"${nodePath.replaceAll('"', '\\"')}" "${cliPath.replaceAll('"', '\\"')}" sync`;
+}
+
+export function windowsLauncherScript(nodePath: string, cliPath: string): string {
+  const command = windowsTaskCommand(nodePath, cliPath).replaceAll('"', '""');
+  return [
+    'Option Explicit',
+    'Dim shell, exitCode',
+    'Set shell = CreateObject("WScript.Shell")',
+    `exitCode = shell.Run("${command}", 0, True)`,
+    'WScript.Quit exitCode',
+    '',
+  ].join('\r\n');
+}
+
+export function windowsLauncherCommand(wscriptPath: string, launcherPath: string): string {
+  return `"${wscriptPath.replaceAll('"', '\\"')}" //B //NoLogo "${launcherPath.replaceAll('"', '\\"')}"`;
+}
+
+function windowsLauncherPath(): string {
+  return join(agentPaths('win32').baseDir, windowsLauncherFilename);
 }
 
 export function launchAgentXml(nodePath: string, cliPath: string, seconds: number): string {
