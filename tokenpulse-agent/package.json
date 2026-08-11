@@ -42,7 +42,7 @@
     "provenance": true
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
+    "better-sqlite3": "^13.0.3",
     "commander": "^14.0.0",
     "open": "^10.2.0",
     "zod": "^4.0.15"
