@@ -67,8 +67,7 @@ npm test
 ## Install Agent
 
 ```bash
-cd tokenpulse-agent
-npm install -g .
+npm install -g tokenpulse
 tokenpulse --help
 ```
 

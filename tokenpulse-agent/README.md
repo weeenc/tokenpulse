@@ -1,4 +1,13 @@
-# tokenpulse-agent
+# tokenpulse
+
+## Install
+
+```bash
+npm install -g tokenpulse
+tokenpulse --help
+```
+
+## Development
 
 ```bash
 npm install

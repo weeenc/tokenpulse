@@ -1,5 +1,5 @@
 {
-  "name": "tokenpulse-agent",
+  "name": "tokenpulse",
   "version": "0.1.0",
   "description": "Cross-platform TokenPulse collection agent",
   "license": "MIT",

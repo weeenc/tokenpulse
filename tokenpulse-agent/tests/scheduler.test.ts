@@ -13,10 +13,10 @@ describe('autosubmit interval', () => {
     expect(
       windowsTaskCommand(
         'C:\\Program Files\\nodejs\\node.exe',
-        'C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse-agent\\dist\\cli.js',
+        'C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse\\dist\\cli.js',
       ),
     ).toBe(
-      '"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse-agent\\dist\\cli.js" sync',
+      '"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Wenc Chao\\AppData\\Roaming\\npm\\node_modules\\tokenpulse\\dist\\cli.js" sync',
     );
   });
   it('escapes launchd XML paths', () => {
