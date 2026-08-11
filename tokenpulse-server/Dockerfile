@@ -1,5 +1,5 @@
 # 构建阶段：先复制依赖清单以复用模块下载缓存，再编译静态 Linux 二进制。
-FROM golang:1.25-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY tokenpulse-server/go.mod tokenpulse-server/go.sum ./
 RUN go mod download
