@@ -4,8 +4,10 @@ import { Monitor, RefreshRight } from '@element-plus/icons-vue';
 import { api, data, errorMessage } from '../api/client.js';
 import { ElMessage } from 'element-plus';
 import TrendChart from '../components/TrendChart.vue';
+import ContributionCalendar from '../components/ContributionCalendar.vue';
 import { formatTokens, relativeTime } from '../utils/format.js';
 import { deviceStatisticsParams, statisticsParams } from '../utils/statistics.js';
+import { contributionDateRange } from '../utils/contributions.js';
 
 interface Totals {
   totalTokens: number;
@@ -39,6 +41,14 @@ interface DeviceOption {
   deviceName: string;
   status: string;
 }
+interface DayDetail extends Totals {
+  estimatedCostUsd: number;
+  messages: number;
+  sessions: number;
+  events: number;
+  sources: Group[];
+  models: Group[];
+}
 const summary = ref<Summary>({
   today: 0,
   week: 0,
@@ -51,6 +61,10 @@ const summary = ref<Summary>({
   estimatedCostUsd: 0,
 });
 const trend = ref<Point[]>([]);
+const contributions = ref<Point[]>([]);
+const contributionDetail = ref<DayDetail | null>(null);
+const contributionDetailDate = ref<string | null>(null);
+const contributionDetailLoading = ref(false);
 const sources = ref<Group[]>([]);
 const devices = ref<Group[]>([]);
 const models = ref<Group[]>([]);
@@ -61,6 +75,8 @@ const days = ref(30);
 const customRange = ref<[Date, Date] | null>(null);
 const loading = ref(false);
 const timezoneOffsetMinutes = new Date().getTimezoneOffset();
+let detailRequest = 0;
+const contributionDetailCache = new Map<string, DayDetail>();
 const rangeLabel = computed(() => {
   if (!customRange.value) return `最近 ${days.value} 天`;
   return `${customRange.value[0].toLocaleDateString('zh-CN')} 至 ${customRange.value[1].toLocaleDateString('zh-CN')}`;
@@ -100,6 +116,11 @@ function selectCustomRange(): void {
 
 async function load() {
   loading.value = true;
+  detailRequest += 1;
+  contributionDetailCache.clear();
+  contributionDetail.value = null;
+  contributionDetailDate.value = null;
+  contributionDetailLoading.value = false;
   try {
     const params = statisticsParams(
       days.value,
@@ -107,23 +128,67 @@ async function load() {
       timezoneOffsetMinutes,
     );
     const deviceParams = deviceStatisticsParams(selectedDeviceId.value);
-    [summary.value, trend.value, sources.value, devices.value, models.value, recent.value] =
-      (await Promise.all([
-        data(
-          api.get('/statistics/summary', {
-            params: { timezoneOffsetMinutes, ...deviceParams },
-          }),
-        ),
-        data(api.get('/statistics/trend', { params: { ...params, ...deviceParams } })),
-        data(api.get('/statistics/by-source', { params: { ...params, ...deviceParams } })),
-        data(api.get('/statistics/by-device', { params: { ...params, ...deviceParams } })),
-        data(api.get('/statistics/by-model', { params: { ...params, ...deviceParams } })),
-        data(api.get('/statistics/recent', { params: deviceParams })),
-      ])) as [Summary, Point[], Group[], Group[], Group[], Recent[]];
+    const contributionParams = statisticsParams(
+      365,
+      contributionDateRange(),
+      timezoneOffsetMinutes,
+    );
+    [
+      summary.value,
+      trend.value,
+      contributions.value,
+      sources.value,
+      devices.value,
+      models.value,
+      recent.value,
+    ] = (await Promise.all([
+      data(
+        api.get('/statistics/summary', {
+          params: { timezoneOffsetMinutes, ...deviceParams },
+        }),
+      ),
+      data(api.get('/statistics/trend', { params: { ...params, ...deviceParams } })),
+      data(
+        api.get('/statistics/trend', {
+          params: { ...contributionParams, ...deviceParams },
+        }),
+      ),
+      data(api.get('/statistics/by-source', { params: { ...params, ...deviceParams } })),
+      data(api.get('/statistics/by-device', { params: { ...params, ...deviceParams } })),
+      data(api.get('/statistics/by-model', { params: { ...params, ...deviceParams } })),
+      data(api.get('/statistics/recent', { params: deviceParams })),
+    ])) as [Summary, Point[], Point[], Group[], Group[], Group[], Recent[]];
   } catch (error) {
     ElMessage.error(errorMessage(error));
   } finally {
     loading.value = false;
+  }
+}
+async function loadContributionDetail(date: string): Promise<void> {
+  const request = ++detailRequest;
+  contributionDetailDate.value = date;
+  const cached = contributionDetailCache.get(date);
+  if (cached) {
+    contributionDetail.value = cached;
+    contributionDetailLoading.value = false;
+    return;
+  }
+  const selectedDate = new Date(`${date}T00:00:00`);
+  const params = statisticsParams(1, [selectedDate, selectedDate], timezoneOffsetMinutes);
+  contributionDetailLoading.value = true;
+  contributionDetail.value = null;
+  try {
+    const result = await data<DayDetail>(
+      api.get('/statistics/day-detail', {
+        params: { ...params, ...deviceStatisticsParams(selectedDeviceId.value) },
+      }),
+    );
+    contributionDetailCache.set(date, result);
+    if (request === detailRequest) contributionDetail.value = result;
+  } catch (error) {
+    if (request === detailRequest) ElMessage.error(errorMessage(error));
+  } finally {
+    if (request === detailRequest) contributionDetailLoading.value = false;
   }
 }
 async function loadDevices() {
@@ -210,6 +275,15 @@ function relative(value: string) {
         ><strong>{{ number(item.value) }}</strong>
       </div>
     </section>
+    <ContributionCalendar
+      v-spotlight
+      :points="contributions"
+      :loading="loading"
+      :detail="contributionDetail"
+      :detail-date="contributionDetailDate"
+      :detail-loading="contributionDetailLoading"
+      @select-day="loadContributionDetail"
+    />
     <section v-spotlight class="panel chart-panel">
       <div class="panel-heading">
         <div>

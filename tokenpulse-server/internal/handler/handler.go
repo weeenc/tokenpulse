@@ -450,6 +450,24 @@ func (h *Handler) StatisticsTrend(c *gin.Context) {
 	api.OK(c, http.StatusOK, result)
 }
 
+// StatisticsDayDetail 返回选定自然日的费用、活动计数及来源和模型明细。
+func (h *Handler) StatisticsDayDetail(c *gin.Context) {
+	filter, ok := statisticsFilter(c)
+	if !ok {
+		return
+	}
+	if filter.StartTime == nil || filter.EndTime == nil {
+		api.Error(c, http.StatusBadRequest, 40004, "startTime and endTime are required")
+		return
+	}
+	result, err := h.statistics.WithContext(c.Request.Context()).DayDetail(middleware.UserID(c), filter)
+	if err != nil {
+		internal(c, err)
+		return
+	}
+	api.OK(c, http.StatusOK, result)
+}
+
 // StatisticsBy 创建按设备、来源或模型维度聚合的处理函数。
 func (h *Handler) StatisticsBy(group string) gin.HandlerFunc {
 	return func(c *gin.Context) {
