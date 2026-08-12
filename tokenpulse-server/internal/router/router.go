@@ -49,6 +49,7 @@ func New(cfg config.Config, h *handler.Handler, logger *slog.Logger) (*gin.Engin
 	users.POST("/devices/:id/revoke", middleware.CSRF(), h.RevokeDevice)
 	users.GET("/statistics/summary", h.StatisticsSummary)
 	users.GET("/statistics/trend", h.StatisticsTrend)
+	users.GET("/statistics/day-detail", h.StatisticsDayDetail)
 	users.GET("/statistics/by-device", h.StatisticsBy("device"))
 	users.GET("/statistics/by-source", h.StatisticsBy("source"))
 	users.GET("/statistics/by-model", h.StatisticsBy("model"))

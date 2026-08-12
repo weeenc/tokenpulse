@@ -332,6 +332,21 @@ paths:
         - $ref: '#/components/parameters/TimezoneOffset'
       responses:
         '200': { description: Daily totals }
+  /api/v1/statistics/day-detail:
+    get:
+      tags: [Statistics]
+      summary: Get token, cost, activity, source, and model details for a selected day
+      security:
+        - accessCookie: []
+      parameters:
+        - $ref: '#/components/parameters/StartTime'
+        - $ref: '#/components/parameters/EndTime'
+        - $ref: '#/components/parameters/DeviceFilter'
+        - $ref: '#/components/parameters/TimezoneOffset'
+      responses:
+        '200': { description: Selected day detail }
+        '400':
+          $ref: '#/components/responses/Error'
   /api/v1/statistics/by-device:
     get:
       tags: [Statistics]

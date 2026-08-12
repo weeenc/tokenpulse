@@ -226,7 +226,9 @@ func TestUsageBatchDeduplicatesAndStatisticsAggregate(t *testing.T) {
 	identity := DeviceIdentity{UserID: owner.ID, DeviceID: device.ID, InstallationID: installation.ID}
 	input := UsageInput{EventID: "a" + fmt.Sprintf("%063d", 0), Source: "codex", InputTokens: 100, OutputTokens: 20, CachedInputTokens: 40, ReasoningTokens: 5, TotalTokens: 120, OccurredAt: time.Now().UTC()}
 	modelName := "gpt-test-priced"
+	sessionID, messageID := "session-1", "message-1"
 	input.Model = &modelName
+	input.SessionID, input.MessageID = &sessionID, &messageID
 	if err := db.Create(&model.ModelPrice{Provider: "openai", Model: modelName, InputPricePerMillion: floatPointer(2), OutputPricePerMillion: floatPointer(10), CachedInputPricePerMillion: floatPointer(0.2), EffectiveAt: time.Now().UTC().Add(-time.Hour)}).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -258,6 +260,14 @@ func TestUsageBatchDeduplicatesAndStatisticsAggregate(t *testing.T) {
 	}
 	if len(groups) != 1 || groups[0].Key != "Mac" || groups[0].TotalTokens != 120 {
 		t.Fatalf("unexpected device stats: %+v", groups)
+	}
+	start, end := input.OccurredAt.Add(-time.Minute), input.OccurredAt.Add(time.Minute)
+	detail, err := NewStatisticsService(db).DayDetail(owner.ID, StatisticsFilter{StartTime: &start, EndTime: &end})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if detail.TotalTokens != 120 || detail.Messages != 1 || detail.Sessions != 1 || detail.Events != 1 || len(detail.Sources) != 1 || len(detail.Models) != 1 || detail.EstimatedCostUSD <= 0 {
+		t.Fatalf("unexpected day detail: %+v", detail)
 	}
 }
 

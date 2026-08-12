@@ -25,4 +25,14 @@ func TestRoutesDoNotConflict(t *testing.T) {
 	if len(engine.Routes()) == 0 {
 		t.Fatal("no routes were registered")
 	}
+	foundDayDetail := false
+	for _, route := range engine.Routes() {
+		if route.Method == "GET" && route.Path == "/api/v1/statistics/day-detail" {
+			foundDayDetail = true
+			break
+		}
+	}
+	if !foundDayDetail {
+		t.Fatal("statistics day detail route was not registered")
+	}
 }

@@ -24,7 +24,7 @@
 - `GET /api/v1/devices/:id`
 - `PATCH /api/v1/devices/:id`
 - `POST /api/v1/devices/:id/revoke`
-- `GET /api/v1/statistics/{summary,trend,by-device,by-source,by-model,recent}`
+- `GET /api/v1/statistics/{summary,trend,day-detail,by-device,by-source,by-model,recent}`
 
 统计接口支持 `startTime`、`endTime`、`deviceId`、`source`、`model` 和
 `timezoneOffsetMinutes`。时间使用 RFC3339；时区偏移与浏览器

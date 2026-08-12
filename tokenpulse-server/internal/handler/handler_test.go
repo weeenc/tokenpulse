@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -33,6 +34,16 @@ func TestStatisticsFilterValidatesRangeAndTimezone(t *testing.T) {
 	filter, ok := statisticsFilter(context)
 	if !ok || filter.TimezoneOffsetMinutes != -480 || filter.StartTime == nil || filter.EndTime == nil {
 		t.Fatalf("valid filter was rejected: %+v", filter)
+	}
+}
+
+// TestStatisticsDayDetailRequiresRange 防止日详情接口退化为无界全量查询。
+func TestStatisticsDayDetailRequiresRange(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	context, response := statisticsContext("")
+	(&Handler{}).StatisticsDayDetail(context)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("day detail without a range returned status %d", response.Code)
 	}
 }
 
