@@ -52,6 +52,21 @@ func TestCORSRejectsUntrustedBrowserOrigin(t *testing.T) {
 	}
 }
 
+// TestCORSAllowsSameOriginIPAddress 验证 IP 页面可以调用同一 IP 下的 API。
+func TestCORSAllowsSameOriginIPAddress(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	engine.Use(CORS([]string{"https://tokenpulse.example.com"}))
+	engine.POST("/login", func(c *gin.Context) { c.Status(http.StatusNoContent) })
+	request := httptest.NewRequest(http.MethodPost, "http://120.53.247.39/login", nil)
+	request.Header.Set("Origin", "http://120.53.247.39")
+	response := httptest.NewRecorder()
+	engine.ServeHTTP(response, request)
+	if response.Code != http.StatusNoContent {
+		t.Fatalf("same-origin IP returned %d", response.Code)
+	}
+}
+
 // TestRateLimiterRemovesExpiredEntries 验证限流器会回收过期键。
 func TestRateLimiterRemovesExpiredEntries(t *testing.T) {
 	limiter := NewRateLimiter(5, time.Minute)

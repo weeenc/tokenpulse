@@ -528,7 +528,7 @@ func (h *Handler) setTokens(c *gin.Context, userID uint64, refresh string) error
 	if err != nil {
 		return err
 	}
-	secure := h.cfg.Env == "production"
+	secure := requestIsSecure(c)
 	// 认证 Cookie 使用 HttpOnly；CSRF Cookie 需要前端读取后回传请求头。
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("tp_access", access, int(h.cfg.AccessExpire.Seconds()), "/", "", secure, true)
@@ -539,11 +539,16 @@ func (h *Handler) setTokens(c *gin.Context, userID uint64, refresh string) error
 
 // clearTokens 使用相同路径和安全属性把浏览器认证 Cookie 设为过期。
 func (h *Handler) clearTokens(c *gin.Context) {
-	secure := h.cfg.Env == "production"
+	secure := requestIsSecure(c)
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("tp_access", "", -1, "/", "", secure, true)
 	c.SetCookie("tp_refresh", "", -1, "/api/v1/auth", "", secure, true)
 	c.SetCookie("tp_csrf", "", -1, "/", "", secure, false)
+}
+
+// requestIsSecure 根据反向代理传入的协议设置 Cookie 的 Secure 属性，兼容同一服务的 HTTP 与 HTTPS 入口。
+func requestIsSecure(c *gin.Context) bool {
+	return c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
 }
 
 // bind 统一执行 JSON 绑定与字段校验，并输出标准参数错误。
