@@ -68,6 +68,16 @@ func TestStatisticsFilterValidatesRangeAndTimezone(t *testing.T) {
 	}
 }
 
+// TestStatisticsDayDetailRequiresRange 防止日详情接口退化为无界全量查询。
+func TestStatisticsDayDetailRequiresRange(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	context, response := statisticsContext("")
+	(&Handler{}).StatisticsDayDetail(context)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("day detail without a range returned status %d", response.Code)
+	}
+}
+
 // TestValidTokenTotals 覆盖完整细分、仅总量和矛盾细分三类输入。
 func TestValidTokenTotals(t *testing.T) {
 	tests := []struct {

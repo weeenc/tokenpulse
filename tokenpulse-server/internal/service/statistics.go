@@ -62,6 +62,17 @@ type RecentEvent struct {
 	OccurredAt  time.Time `json:"occurredAt"`  // OccurredAt 为事件发生时间。
 }
 
+// DayDetail 汇总单日用量、活动计数以及来源和模型分布。
+type DayDetail struct {
+	Totals
+	EstimatedCostUSD float64      `json:"estimatedCostUsd"` // EstimatedCostUSD 为当天历史价格估算费用。
+	Messages         int64        `json:"messages"`         // Messages 为具有消息标识的去重消息数。
+	Sessions         int64        `json:"sessions"`         // Sessions 为具有会话标识的去重会话数。
+	Events           int64        `json:"events"`           // Events 为当天采集事件数。
+	Sources          []GroupTotal `json:"sources"`          // Sources 为当天按采集工具汇总的用量。
+	Models           []GroupTotal `json:"models"`           // Models 为当天按模型汇总的用量。
+}
+
 // StatisticsService 提供只读统计查询能力。
 type StatisticsService struct {
 	store *repository.Store // store 为统计查询的数据库访问入口。
@@ -142,6 +153,40 @@ func (s *StatisticsService) Trend(userID uint64, filter StatisticsFilter) ([]Tre
 		return nil, fmt.Errorf("statistics trend: %w", err)
 	}
 	return rows, nil
+}
+
+// DayDetail 返回指定筛选范围的详细用量；调用方通常传入一个本地自然日的 UTC 边界。
+func (s *StatisticsService) DayDetail(userID uint64, filter StatisticsFilter) (DayDetail, error) {
+	summary, err := s.Summary(userID, filter)
+	if err != nil {
+		return DayDetail{}, err
+	}
+	detail := DayDetail{Totals: summary.Totals, EstimatedCostUSD: summary.EstimatedCostUSD}
+	var activity struct {
+		Messages int64
+		Sessions int64
+		Events   int64
+	}
+	if err := s.filtered(userID, filter).Select(`
+		COUNT(*) AS events,
+		COUNT(DISTINCT NULLIF(message_id, '')) AS messages,
+		COUNT(DISTINCT NULLIF(session_id, '')) AS sessions`).Scan(&activity).Error; err != nil {
+		return DayDetail{}, fmt.Errorf("statistics day activity: %w", err)
+	}
+	detail.Messages, detail.Sessions, detail.Events = activity.Messages, activity.Sessions, activity.Events
+	if detail.Sources, err = s.By(userID, filter, "source"); err != nil {
+		return DayDetail{}, err
+	}
+	if detail.Models, err = s.By(userID, filter, "model"); err != nil {
+		return DayDetail{}, err
+	}
+	if detail.Sources == nil {
+		detail.Sources = []GroupTotal{}
+	}
+	if detail.Models == nil {
+		detail.Models = []GroupTotal{}
+	}
+	return detail, nil
 }
 
 // By 按 device、source 或 model 聚合，并限制最多返回前 100 组。
