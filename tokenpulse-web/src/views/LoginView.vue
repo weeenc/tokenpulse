@@ -26,7 +26,7 @@ async function submit() {
 }
 </script>
 <template>
-  <AuthShell title="欢迎回来" subtitle="登录后查看跨设备的 Token 使用脉搏。"
+  <AuthShell title="欢迎回来" subtitle="跨设备，掌握每一次 Token 消耗"
     ><el-form label-position="top" @submit.prevent="submit"
       ><el-form-item label="用户名或邮箱"
         ><el-input v-model="form.identity" size="large" autocomplete="username" /></el-form-item

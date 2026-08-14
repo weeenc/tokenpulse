@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BrandMark from './BrandMark.vue';
+
 defineProps<{ title: string; subtitle: string }>();
 </script>
 <template>
@@ -9,9 +11,7 @@ defineProps<{ title: string; subtitle: string }>();
       <span class="ambient-blob ambient-blob-right"></span>
     </div>
     <section v-spotlight class="auth-card">
-      <router-link to="/" class="auth-brand"
-        ><span class="brand-mark"><span></span></span>TokenPulse</router-link
-      >
+      <router-link to="/" class="auth-brand"><BrandMark />TokenPulse</router-link>
       <div class="auth-heading">
         <span class="eyebrow">AI USAGE INTELLIGENCE</span>
         <h1>{{ title }}</h1>

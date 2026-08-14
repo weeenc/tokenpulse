@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Close, DataAnalysis, Monitor, SwitchButton } from '@element-plus/icons-vue';
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import BrandMark from './components/BrandMark.vue';
 import { useAuthStore } from './stores/auth.js';
 
 const route = useRoute();
@@ -54,7 +55,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateScroll));
       <aside class="sidebar">
         <div class="sidebar-header">
           <router-link class="brand" to="/dashboard">
-            <span class="brand-mark"><span></span></span><span>TokenPulse</span>
+            <BrandMark /><span>TokenPulse</span>
           </router-link>
           <button
             class="mobile-menu"

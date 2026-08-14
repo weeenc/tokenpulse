@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AuthShell: typeof import('./components/AuthShell.vue')['default']
+    BrandMark: typeof import('./components/BrandMark.vue')['default']
     ContributionCalendar: typeof import('./components/ContributionCalendar.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
