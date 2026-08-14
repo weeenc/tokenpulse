@@ -150,7 +150,7 @@ MYSQL_TEST_DSN='tokenpulse:tokenpulse@tcp(127.0.0.1:3306)/tokenpulse_test?parseT
 - macOS 使用 Keychain；Windows 使用当前用户范围 DPAPI。
 - 密码使用 bcrypt。
 - Refresh Token 是服务端保存 Hash 的不透明会话，使用后立即轮换，退出时撤销；Cookie 使用 HttpOnly 与 SameSite。
-- 浏览器写请求使用 CSRF Cookie/Header 双提交校验，并验证 `Origin` allow list。
+- 浏览器写请求使用 CSRF Cookie/Header 双提交校验，并验证 `Origin` allow list；幂等退出接口仅依赖 `Origin` 与 `SameSite` 防护，确保 Cookie 不完整时仍能退出。
 - 生产环境必须启用 HTTPS、强随机 Secret 和精确 CORS allow list。
 - 生产配置会拒绝短 JWT Secret、HTTP 公网地址和缺失的数据库密码。
 

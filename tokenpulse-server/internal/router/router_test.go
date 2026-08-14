@@ -4,6 +4,9 @@ package router
 import (
 	"io"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/tokenpulse/tokenpulse/server/internal/config"
@@ -34,5 +37,49 @@ func TestRoutesDoNotConflict(t *testing.T) {
 	}
 	if !foundDayDetail {
 		t.Fatal("statistics day detail route was not registered")
+	}
+}
+
+// TestLogoutWithoutCSRF 验证 CSRF Cookie 丢失时仍可退出并清理浏览器认证 Cookie。
+func TestLogoutWithoutCSRF(t *testing.T) {
+	cfg := config.Config{Env: "test", JWTSecret: "test", CORSAllowedOrigins: []string{"http://localhost"}}
+	engine, err := New(cfg, handler.New(cfg, nil), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)
+	response := httptest.NewRecorder()
+	engine.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("logout without CSRF returned status %d: %s", response.Code, response.Body.String())
+	}
+	setCookies := strings.Join(response.Header().Values("Set-Cookie"), "\n")
+	for _, name := range []string{"tp_access", "tp_refresh", "tp_csrf"} {
+		if !strings.Contains(setCookies, name+"=") || !strings.Contains(setCookies, name+"=; Path=") {
+			t.Errorf("logout did not clear %s cookie: %s", name, setCookies)
+		}
+	}
+}
+
+// TestLogoutRejectsCrossOriginRequest 确保退出免除双提交令牌后仍受全局 Origin 校验保护。
+func TestLogoutRejectsCrossOriginRequest(t *testing.T) {
+	cfg := config.Config{Env: "test", JWTSecret: "test", CORSAllowedOrigins: []string{"http://localhost"}}
+	engine, err := New(cfg, handler.New(cfg, nil), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)
+	request.Header.Set("Origin", "https://attacker.example")
+	response := httptest.NewRecorder()
+	engine.ServeHTTP(response, request)
+
+	if response.Code != http.StatusForbidden {
+		t.Fatalf("cross-origin logout returned status %d, want %d", response.Code, http.StatusForbidden)
+	}
+	if len(response.Header().Values("Set-Cookie")) != 0 {
+		t.Fatal("cross-origin logout unexpectedly cleared authentication cookies")
 	}
 }
