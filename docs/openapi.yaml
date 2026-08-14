@@ -76,12 +76,8 @@ paths:
   /api/v1/auth/logout:
     post:
       tags: [Auth]
-      summary: Revoke the refresh session and clear cookies
-      security:
-        - refreshCookie: []
-          csrfCookie: []
-      parameters:
-        - $ref: '#/components/parameters/CSRF'
+      summary: Revoke the refresh session and clear cookies idempotently
+      security: []
       responses:
         '200': { description: Logged out }
   /api/v1/auth/me:

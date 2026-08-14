@@ -32,7 +32,9 @@ func New(cfg config.Config, h *handler.Handler, logger *slog.Logger) (*gin.Engin
 	auth.POST("/register", limiter.Middleware(), h.Register)
 	auth.POST("/login", limiter.Middleware(), h.Login)
 	auth.POST("/refresh", limiter.Middleware(), middleware.CSRF(), h.Refresh)
-	auth.POST("/logout", middleware.CSRF(), h.Logout)
+	// 退出必须保持幂等，即使 CSRF Cookie 已过期或缺失也要能清理认证 Cookie。
+	// 浏览器跨站请求仍由全局 Origin 校验和 SameSite=Lax Cookie 策略阻断。
+	auth.POST("/logout", h.Logout)
 	auth.GET("/me", middleware.UserAuth(cfg.JWTSecret), h.Me)
 	deviceAuth := v1.Group("/device-auth")
 	deviceAuth.POST("/request", limiter.Middleware(), h.DeviceAuthRequest)
