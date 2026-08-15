@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { Monitor, EditPen, CircleClose } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { api, data, errorMessage } from '../api/client.js';
+import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { platformName } from '../utils/device-auth.js';
 import { formatDateTime } from '../utils/format.js';
 interface Device {
@@ -23,7 +23,7 @@ async function load() {
   try {
     devices.value = await data(api.get('/devices'));
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   } finally {
     loading.value = false;
   }
@@ -39,7 +39,8 @@ async function rename(device: Device) {
     ElMessage.success('设备名称已更新');
     await load();
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error(errorMessage(error));
+    if (error !== 'cancel' && error !== 'close' && !isCanceledRequest(error))
+      ElMessage.error(errorMessage(error));
   }
 }
 async function revoke(device: Device) {
@@ -53,7 +54,8 @@ async function revoke(device: Device) {
     ElMessage.success('设备已撤销');
     await load();
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error(errorMessage(error));
+    if (error !== 'cancel' && error !== 'close' && !isCanceledRequest(error))
+      ElMessage.error(errorMessage(error));
   }
 }
 function platform(value: string) {
