@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { api, data } from '../api/client.js';
+import { api, beginSessionEnd, data, resumeSession } from '../api/client.js';
 
 export interface User {
   id: number;
@@ -23,18 +23,26 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value;
   }
   async function login(identity: string, password: string): Promise<void> {
+    resumeSession();
     user.value = await data<User>(api.post('/auth/login', { identity, password }));
     checked.value = true;
   }
   async function register(username: string, email: string, password: string): Promise<void> {
+    resumeSession();
     user.value = await data<User>(
       api.post('/auth/register', { username, email: email || undefined, password }),
     );
     checked.value = true;
   }
   async function logout(): Promise<void> {
-    await api.post('/auth/logout');
-    user.value = null;
+    await beginSessionEnd();
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      // 服务端不可达时也必须结束本地会话，避免用户被困在登录态页面。
+      user.value = null;
+      checked.value = true;
+    }
   }
   return { user, checked, me, login, register, logout };
 });

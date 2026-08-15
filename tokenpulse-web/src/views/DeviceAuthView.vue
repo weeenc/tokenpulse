@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Monitor, CircleCheckFilled, WarningFilled } from '@element-plus/icons-vue';
-import { api, data, errorMessage } from '../api/client.js';
+import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { approvalPayload, platformName, type DeviceChoice } from '../utils/device-auth.js';
 
 interface Device {
@@ -42,7 +42,7 @@ async function load() {
       api.get(`/device-auth/info/${encodeURIComponent(code.value)}`),
     );
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   } finally {
     loading.value = false;
   }
@@ -52,7 +52,7 @@ async function approve() {
     await api.post('/device-auth/approve', approvalPayload(code.value, choice.value));
     finished.value = 'approved';
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   }
 }
 async function deny() {
@@ -60,7 +60,7 @@ async function deny() {
     await api.post('/device-auth/deny', { userCode: code.value });
     finished.value = 'denied';
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   }
 }
 </script>

@@ -19,13 +19,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [go, javascript-typescript]
+        include:
+          - language: go
+            build-mode: manual
+          - language: javascript-typescript
+            build-mode: none
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: manual
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         if: matrix.language == 'javascript-typescript'
         with:
@@ -38,6 +38,10 @@ jobs:
         with:
           go-version-file: tokenpulse-server/go.mod
           cache-dependency-path: tokenpulse-server/go.sum
+      - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
       - run: go build ./...
         if: matrix.language == 'go'
         working-directory: tokenpulse-server

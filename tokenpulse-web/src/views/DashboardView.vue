@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { Monitor, RefreshRight } from '@element-plus/icons-vue';
-import { api, data, errorMessage } from '../api/client.js';
+import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { ElMessage } from 'element-plus';
 import TrendChart from '../components/TrendChart.vue';
 import ContributionCalendar from '../components/ContributionCalendar.vue';
@@ -159,7 +159,7 @@ async function load() {
       data(api.get('/statistics/recent', { params: deviceParams })),
     ])) as [Summary, Point[], Point[], Group[], Group[], Group[], Recent[]];
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   } finally {
     loading.value = false;
   }
@@ -186,7 +186,8 @@ async function loadContributionDetail(date: string): Promise<void> {
     contributionDetailCache.set(date, result);
     if (request === detailRequest) contributionDetail.value = result;
   } catch (error) {
-    if (request === detailRequest) ElMessage.error(errorMessage(error));
+    if (request === detailRequest && !isCanceledRequest(error))
+      ElMessage.error(errorMessage(error));
   } finally {
     if (request === detailRequest) contributionDetailLoading.value = false;
   }
@@ -195,7 +196,7 @@ async function loadDevices() {
   try {
     deviceOptions.value = await data(api.get('/devices'));
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    if (!isCanceledRequest(error)) ElMessage.error(errorMessage(error));
   }
 }
 onMounted(() => {

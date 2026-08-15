@@ -10,7 +10,10 @@ import { useAuthStore } from './stores/auth.js';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
-const showShell = computed(() => auth.user && !['/login', '/register'].includes(route.path));
+const loggingOut = ref(false);
+const showShell = computed(
+  () => (Boolean(auth.user) || loggingOut.value) && !['/login', '/register'].includes(route.path),
+);
 const menuOpen = ref(false);
 const scrollProgress = ref(0);
 const shellStyle = computed(() => ({ '--scroll-progress': scrollProgress.value }));
@@ -20,9 +23,20 @@ function updateScroll(): void {
 }
 
 async function logout() {
+  if (loggingOut.value) return;
+  loggingOut.value = true;
   menuOpen.value = false;
-  await auth.logout();
-  await router.push('/login');
+  try {
+    await auth.logout();
+  } catch {
+    // 本地状态已在 store 中清理；即使服务端暂时不可达也继续回到登录页。
+  } finally {
+    try {
+      await router.replace('/login');
+    } finally {
+      loggingOut.value = false;
+    }
+  }
 }
 
 watch(
@@ -88,7 +102,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateScroll));
               <strong>{{ auth.user?.username }}</strong
               ><small>个人账户</small>
             </div>
-            <button aria-label="退出" title="退出登录" @click="logout">
+            <button aria-label="退出" title="退出登录" :disabled="loggingOut" @click="logout">
               <el-icon><SwitchButton /></el-icon>
             </button>
           </div>
