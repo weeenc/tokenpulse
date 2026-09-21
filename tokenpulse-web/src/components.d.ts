@@ -27,6 +27,7 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ThemeToggle: typeof import('./components/ThemeToggle.vue')['default']
     TrendChart: typeof import('./components/TrendChart.vue')['default']
   }
   export interface GlobalDirectives {

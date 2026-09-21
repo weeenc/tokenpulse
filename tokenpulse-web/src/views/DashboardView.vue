@@ -5,7 +5,8 @@ import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { ElMessage } from 'element-plus';
 import TrendChart from '../components/TrendChart.vue';
 import ContributionCalendar from '../components/ContributionCalendar.vue';
-import { formatTokens, relativeTime } from '../utils/format.js';
+import ThemeToggle from '../components/ThemeToggle.vue';
+import { formatTokens, relativeTime, tokenPeriodLabels } from '../utils/format.js';
 import { deviceStatisticsParams, statisticsParams } from '../utils/statistics.js';
 import { contributionDateRange } from '../utils/contributions.js';
 
@@ -203,10 +204,25 @@ onMounted(() => {
   void Promise.all([loadDevices(), load()]);
 });
 const cards = computed(() => [
-  { label: '今日 Token', value: summary.value.today, accent: 'violet' },
-  { label: '本周 Token', value: summary.value.week, accent: 'green' },
-  { label: '本月 Token', value: summary.value.month, accent: 'amber' },
-  { label: '累计 Token', value: summary.value.totalTokens, accent: 'blue' },
+  {
+    label: '今日 Token',
+    period: tokenPeriodLabels().today,
+    value: summary.value.today,
+    accent: 'violet',
+  },
+  {
+    label: '本周 Token',
+    period: tokenPeriodLabels().week,
+    value: summary.value.week,
+    accent: 'green',
+  },
+  {
+    label: '本月 Token',
+    period: tokenPeriodLabels().month,
+    value: summary.value.month,
+    accent: 'amber',
+  },
+  { label: '累计 Token', period: '全部时间', value: summary.value.totalTokens, accent: 'blue' },
 ]);
 const tokenTypes = computed(() => [
   { label: 'Input', value: summary.value.inputTokens },
@@ -255,6 +271,7 @@ function relative(value: string) {
           circle
           @click="load"
         />
+        <ThemeToggle class="desktop-theme-toggle" />
       </div>
     </header>
     <section class="metric-grid">
@@ -265,8 +282,11 @@ function relative(value: string) {
         class="metric-card"
         :class="card.accent"
       >
-        <span>{{ card.label }}</span
-        ><strong>{{ number(card.value) }}</strong
+        <div class="metric-heading">
+          <span>{{ card.label }}</span>
+          <small class="metric-period">{{ card.period }}</small>
+        </div>
+        <strong>{{ number(card.value) }}</strong
         ><small>tokens</small>
       </article>
     </section>

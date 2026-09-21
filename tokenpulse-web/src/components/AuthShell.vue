@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import BrandMark from './BrandMark.vue';
+import ThemeToggle from './ThemeToggle.vue';
 
 defineProps<{ title: string; subtitle: string }>();
 </script>
 <template>
   <div class="auth-page">
+    <ThemeToggle class="auth-theme-toggle" />
     <div class="ambient-canvas" aria-hidden="true">
       <span class="ambient-blob ambient-blob-primary"></span>
       <span class="ambient-blob ambient-blob-left"></span>

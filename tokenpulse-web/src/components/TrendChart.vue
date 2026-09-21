@@ -4,6 +4,7 @@ import { LineChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useTheme } from '../utils/theme.js';
 
 use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
 
@@ -16,20 +17,25 @@ interface Point {
 }
 const props = defineProps<{ points: Point[] }>();
 const root = ref<HTMLDivElement>();
+const { theme } = useTheme();
 let chart: ECharts | null = null;
 function render() {
   if (!root.value) return;
+  const styles = getComputedStyle(root.value);
+  const color = (name: string) => styles.getPropertyValue(name).trim();
+  const colors = ['--chart-total', '--chart-input', '--chart-output', '--chart-cache'].map(color);
   chart ??= init(root.value);
   chart.setOption({
+    color: colors,
     animationDuration: 700,
     animationEasing: 'cubicOut',
     grid: { top: 34, right: 18, bottom: 28, left: 54 },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'rgba(13,13,17,.94)',
-      borderColor: 'rgba(255,255,255,.09)',
-      textStyle: { color: '#d5d6dc', fontSize: 11 },
-      extraCssText: 'box-shadow: 0 16px 44px rgba(0,0,0,.45); backdrop-filter: blur(14px);',
+      backgroundColor: color('--overlay-background'),
+      borderColor: color('--border-default'),
+      textStyle: { color: color('--foreground'), fontSize: 11 },
+      extraCssText: `box-shadow: ${color('--el-box-shadow-light')}; backdrop-filter: blur(14px);`,
       axisPointer: { lineStyle: { color: 'rgba(132,144,239,.28)' } },
     },
     legend: {
@@ -37,20 +43,25 @@ function render() {
       right: 8,
       itemWidth: 12,
       itemHeight: 3,
-      textStyle: { color: '#747983', fontSize: 10 },
+      textStyle: { color: color('--foreground-muted'), fontSize: 10 },
+      inactiveColor: color('--foreground-muted'),
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: props.points.map((p) => p.date.slice(5)),
       axisTick: { show: false },
-      axisLine: { lineStyle: { color: 'rgba(255,255,255,.07)' } },
-      axisLabel: { color: '#5f646e', fontSize: 9, margin: 12 },
+      axisLine: { lineStyle: { color: color('--border-default') } },
+      axisLabel: { color: color('--foreground-muted'), fontSize: 9, margin: 12 },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,.045)', type: 'dashed' } },
-      axisLabel: { color: '#5f646e', fontSize: 9, formatter: (value: number) => compact(value) },
+      splitLine: { lineStyle: { color: color('--border-default'), type: 'dashed' } },
+      axisLabel: {
+        color: color('--foreground-muted'),
+        fontSize: 9,
+        formatter: (value: number) => compact(value),
+      },
     },
     series: [
       {
@@ -61,7 +72,7 @@ function render() {
         data: props.points.map((p) => p.totalTokens),
         lineStyle: {
           width: 2.5,
-          color: '#7c87e8',
+          color: colors[0],
           shadowColor: 'rgba(94,106,210,.4)',
           shadowBlur: 12,
         },
@@ -73,7 +84,7 @@ function render() {
         smooth: true,
         symbol: 'none',
         data: props.points.map((p) => p.inputTokens),
-        lineStyle: { width: 1.5, color: '#62cba6' },
+        lineStyle: { width: 1.5, color: colors[1] },
       },
       {
         name: '输出',
@@ -81,7 +92,7 @@ function render() {
         smooth: true,
         symbol: 'none',
         data: props.points.map((p) => p.outputTokens),
-        lineStyle: { width: 1.5, color: '#d7a967' },
+        lineStyle: { width: 1.5, color: colors[2] },
       },
       {
         name: '缓存',
@@ -89,7 +100,7 @@ function render() {
         smooth: true,
         symbol: 'none',
         data: props.points.map((p) => p.cachedInputTokens),
-        lineStyle: { width: 1.5, color: '#6c9fca' },
+        lineStyle: { width: 1.5, color: colors[3] },
       },
     ],
   });
@@ -100,6 +111,7 @@ onMounted(() => {
   window.addEventListener('resize', resize);
 });
 watch(() => props.points, render, { deep: true });
+watch(theme, render, { flush: 'post' });
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resize);
   chart?.dispose();

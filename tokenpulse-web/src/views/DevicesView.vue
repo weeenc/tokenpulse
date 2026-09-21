@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { platformName } from '../utils/device-auth.js';
 import { formatDateTime } from '../utils/format.js';
+import ThemeToggle from '../components/ThemeToggle.vue';
 interface Device {
   id: number;
   deviceId: string;
@@ -74,6 +75,7 @@ onMounted(load);
         <h1>设备管理</h1>
         <p>管理连接到此账户的 Agent 安装。</p>
       </div>
+      <ThemeToggle class="desktop-theme-toggle" />
     </header>
     <section class="device-grid">
       <article

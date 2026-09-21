@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus';
 import { Monitor, CircleCheckFilled, WarningFilled } from '@element-plus/icons-vue';
 import { api, data, errorMessage, isCanceledRequest } from '../api/client.js';
 import { approvalPayload, platformName, type DeviceChoice } from '../utils/device-auth.js';
+import ThemeToggle from '../components/ThemeToggle.vue';
 
 interface Device {
   id: number;
@@ -66,6 +67,7 @@ async function deny() {
 </script>
 <template>
   <div class="device-auth-page">
+    <ThemeToggle class="auth-theme-toggle desktop-theme-toggle" />
     <section v-loading="loading" v-spotlight class="device-auth-card">
       <template v-if="finished"
         ><el-icon class="result-icon" :class="finished"
