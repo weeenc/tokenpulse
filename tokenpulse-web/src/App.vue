@@ -5,6 +5,7 @@ import { Close, DataAnalysis, Monitor, SwitchButton } from '@element-plus/icons-
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import BrandMark from './components/BrandMark.vue';
+import ThemeToggle from './components/ThemeToggle.vue';
 import { useAuthStore } from './stores/auth.js';
 
 const route = useRoute();
@@ -71,16 +72,19 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateScroll));
           <router-link class="brand" to="/dashboard">
             <BrandMark /><span>TokenPulse</span>
           </router-link>
-          <button
-            class="mobile-menu"
-            type="button"
-            aria-label="切换导航菜单"
-            :aria-expanded="menuOpen"
-            @click="menuOpen = !menuOpen"
-          >
-            <el-icon v-if="menuOpen"><Close /></el-icon>
-            <span v-else class="menu-glyph" aria-hidden="true"><i></i></span>
-          </button>
+          <div class="sidebar-header-actions">
+            <button
+              class="mobile-menu"
+              type="button"
+              aria-label="切换导航菜单"
+              :aria-expanded="menuOpen"
+              @click="menuOpen = !menuOpen"
+            >
+              <el-icon v-if="menuOpen"><Close /></el-icon>
+              <span v-else class="menu-glyph" aria-hidden="true"><i></i></span>
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
         <div class="sidebar-panel" :class="{ open: menuOpen }">
           <nav aria-label="主导航">

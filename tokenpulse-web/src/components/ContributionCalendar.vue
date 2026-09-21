@@ -257,7 +257,7 @@ function inspectWithKeyboard(index: number): void {
           <h2>每日 Token</h2>
           <span>最近一年</span>
         </div>
-        <p>每日 Token 使用强度，颜色越亮表示用量越高。</p>
+        <p>每日 Token 使用强度，色阶对应不同的用量。</p>
       </div>
       <div class="contribution-actions">
         <div class="view-switch" aria-label="切换贡献图视图" role="group">
@@ -428,20 +428,20 @@ function inspectWithKeyboard(index: number): void {
 
 .contribution-title-row h2 {
   margin: 0;
-  color: #dedee2;
+  color: var(--text-strong, #dedee2);
   font-size: 15px;
   font-weight: 610;
   letter-spacing: -0.018em;
 }
 
 .contribution-title-row span {
-  color: #737986;
+  color: var(--text-muted, #737986);
   font-size: 10px;
 }
 
 .contribution-heading p {
   margin: 5px 0 0;
-  color: #696e78;
+  color: var(--text-muted, #696e78);
   font-size: 11px;
 }
 
@@ -454,9 +454,9 @@ function inspectWithKeyboard(index: number): void {
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(var(--neutral-rgb), 0.06);
   border-radius: 9px;
-  background: rgba(3, 3, 5, 0.56);
+  background: var(--inset-background);
 }
 
 .view-switch::before {
@@ -466,10 +466,10 @@ function inspectWithKeyboard(index: number): void {
   left: 3px;
   width: calc((100% - 6px) / 2);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(var(--neutral-rgb), 0.09);
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.22);
+    inset 0 1px rgba(var(--neutral-rgb), 0.08),
+    0 4px 12px rgb(0 0 0 / calc(0.22 * var(--shadow-strength)));
   content: '';
   transform: translateX(0);
   transition: transform 180ms var(--ease-expo);
@@ -485,7 +485,7 @@ function inspectWithKeyboard(index: number): void {
   min-width: 38px;
   height: 27px;
   padding: 0 9px;
-  color: #707681;
+  color: var(--text-muted, #707681);
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -497,11 +497,11 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .view-switch button:hover {
-  color: #bec2cb;
+  color: var(--text-primary, #bec2cb);
 }
 
 .view-switch button.active {
-  color: #e5e6eb;
+  color: var(--text-strong, #e5e6eb);
 }
 
 .view-switch button:focus-visible {
@@ -520,14 +520,14 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .contribution-stats strong {
-  color: #cfd1d7;
+  color: var(--text-primary, #cfd1d7);
   font-size: 11px;
   font-weight: 590;
 }
 
 .contribution-stats span {
   margin-top: 4px;
-  color: #666c76;
+  color: var(--text-muted, #666c76);
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 9px;
 }
@@ -537,7 +537,7 @@ function inspectWithKeyboard(index: number): void {
   min-height: 154px;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(var(--neutral-rgb), 0.12) transparent;
   scrollbar-width: thin;
   transition: opacity 180ms ease;
 }
@@ -567,7 +567,7 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .month-row span {
-  color: #5d636d;
+  color: var(--text-faint, #5d636d);
   font-size: 8px;
   white-space: nowrap;
 }
@@ -582,7 +582,7 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .weekday-row span {
-  color: #565c66;
+  color: var(--text-faint, #565c66);
   font-size: 8px;
 }
 
@@ -609,13 +609,13 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .contribution-cell {
-  --cell-color: #17181e;
+  --cell-color: var(--calendar-level-0, #17181e);
   position: relative;
   display: block;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(var(--neutral-rgb), 0.035);
   background: var(--cell-color);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px rgba(var(--neutral-rgb), 0.025);
   cursor: pointer;
   transition:
     transform 160ms var(--ease-expo),
@@ -634,27 +634,27 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .level-0 {
-  --cell-color: #17181e;
+  --cell-color: var(--calendar-level-0, #17181e);
   background: var(--cell-color);
 }
 
 .level-1 {
-  --cell-color: #30375f;
+  --cell-color: var(--calendar-level-1, #30375f);
   background: var(--cell-color);
 }
 
 .level-2 {
-  --cell-color: #4853a0;
+  --cell-color: var(--calendar-level-2, #4853a0);
   background: var(--cell-color);
 }
 
 .level-3 {
-  --cell-color: #6572d4;
+  --cell-color: var(--calendar-level-3, #6572d4);
   background: var(--cell-color);
 }
 
 .level-4 {
-  --cell-color: #98a3ff;
+  --cell-color: var(--calendar-level-4, #98a3ff);
   background: var(--cell-color);
 }
 
@@ -666,13 +666,13 @@ function inspectWithKeyboard(index: number): void {
 
 .contribution-legend span {
   margin: 0 3px;
-  color: #5c626c;
+  color: var(--text-faint, #5c626c);
   font-size: 8px;
 }
 
 .contribution-legend i {
   --cell-size: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(var(--neutral-rgb), 0.04);
 }
 
 .is-3d {
@@ -685,10 +685,10 @@ function inspectWithKeyboard(index: number): void {
   border-radius: 12px;
   background:
     radial-gradient(ellipse 66% 52% at 62% 72%, rgba(31, 111, 235, 0.12), transparent 72%),
-    linear-gradient(180deg, rgba(7, 10, 16, 0.56), rgba(8, 12, 20, 0.86));
+    var(--calendar-stage-background);
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.025),
-    inset 0 -28px 70px rgba(0, 0, 0, 0.18);
+    inset 0 1px rgba(var(--neutral-rgb), 0.025),
+    inset 0 -28px 70px rgb(0 0 0 / calc(0.18 * var(--shadow-strength)));
 }
 
 .is-3d .calendar-stage {
@@ -710,23 +710,23 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .is-3d .level-0 {
-  --cell-color: #191f2b;
+  --cell-color: var(--calendar-3d-level-0, #191f2b);
 }
 
 .is-3d .level-1 {
-  --cell-color: #4069b2;
+  --cell-color: var(--calendar-3d-level-1, #4069b2);
 }
 
 .is-3d .level-2 {
-  --cell-color: #1f6feb;
+  --cell-color: var(--calendar-3d-level-2, #1f6feb);
 }
 
 .is-3d .level-3 {
-  --cell-color: #388bfd;
+  --cell-color: var(--calendar-3d-level-3, #388bfd);
 }
 
 .is-3d .level-4 {
-  --cell-color: #79b8ff;
+  --cell-color: var(--calendar-3d-level-4, #79b8ff);
 }
 
 .is-3d .contribution-cell {
@@ -735,8 +735,8 @@ function inspectWithKeyboard(index: number): void {
   background: var(--cell-color);
   filter: none;
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.19),
-    0 1px 2px rgba(0, 0, 0, 0.56);
+    inset 0 1px rgba(var(--neutral-rgb), 0.19),
+    0 1px 2px rgb(0 0 0 / calc(0.56 * var(--shadow-strength)));
   transform: translateZ(calc(var(--bar-height) + 2px));
   transform-style: preserve-3d;
   transition:
@@ -757,9 +757,9 @@ function inspectWithKeyboard(index: number): void {
   left: -1px;
   width: calc(100% + 2px);
   height: calc(var(--bar-height) + 2px);
-  border-inline: 1px solid rgba(0, 0, 0, 0.34);
+  border-inline: 1px solid rgb(0 0 0 / calc(0.34 * var(--shadow-strength)));
   background: color-mix(in srgb, var(--cell-color) 58%, #000);
-  box-shadow: inset 0 -1px rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 -1px rgb(0 0 0 / calc(0.24 * var(--shadow-strength)));
   transform: rotateX(-90deg);
   transform-origin: top;
 }
@@ -769,9 +769,9 @@ function inspectWithKeyboard(index: number): void {
   right: 100%;
   width: calc(var(--bar-height) + 2px);
   height: calc(100% + 2px);
-  border-block: 1px solid rgba(0, 0, 0, 0.3);
+  border-block: 1px solid rgb(0 0 0 / calc(0.3 * var(--shadow-strength)));
   background: color-mix(in srgb, var(--cell-color) 72%, #000);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px rgba(var(--neutral-rgb), 0.045);
   transform: rotateY(-90deg);
   transform-origin: right;
 }
@@ -793,20 +793,20 @@ function inspectWithKeyboard(index: number): void {
   max-height: calc(100vh - 24px);
   padding: 12px 13px;
   overflow-y: auto;
-  color: #d7d9e0;
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  color: var(--text-strong, #d7d9e0);
+  border: 1px solid rgba(var(--neutral-rgb), 0.11);
   border-radius: 10px;
-  background: rgba(13, 14, 19, 0.97);
+  background: var(--overlay-background);
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.52),
-    inset 0 1px rgba(255, 255, 255, 0.045);
+    0 18px 48px rgb(0 0 0 / calc(0.52 * var(--shadow-strength))),
+    inset 0 1px rgba(var(--neutral-rgb), 0.045);
   backdrop-filter: blur(18px);
   pointer-events: none;
 }
 
 .contribution-tooltip header {
   margin-bottom: 9px;
-  color: #858b98;
+  color: var(--text-muted, #858b98);
   font-size: 10px;
   font-weight: 540;
 }
@@ -822,16 +822,16 @@ function inspectWithKeyboard(index: number): void {
 
 .tooltip-total {
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid rgba(var(--neutral-rgb), 0.075);
 }
 
 .tooltip-total span {
-  color: #aeb3bf;
+  color: var(--text-secondary, #aeb3bf);
   font-size: 11px;
 }
 
 .tooltip-total strong {
-  color: #f0f1f5;
+  color: var(--text-strong, #f0f1f5);
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 17px;
   font-variant-numeric: tabular-nums;
@@ -851,11 +851,11 @@ function inspectWithKeyboard(index: number): void {
 }
 
 .tooltip-breakdown dt {
-  color: #777d89;
+  color: var(--text-muted, #777d89);
 }
 
 .tooltip-breakdown dd {
-  color: #c3c7d0;
+  color: var(--text-primary, #c3c7d0);
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-variant-numeric: tabular-nums;
 }
@@ -863,12 +863,12 @@ function inspectWithKeyboard(index: number): void {
 .tooltip-groups {
   margin-top: 11px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 1px solid rgba(var(--neutral-rgb), 0.075);
 }
 
 .tooltip-groups h4 {
   margin: 0 0 7px;
-  color: #676d79;
+  color: var(--text-muted, #676d79);
   font-size: 8px;
   font-weight: 650;
   letter-spacing: 0.12em;
@@ -883,7 +883,7 @@ function inspectWithKeyboard(index: number): void {
 
 .tooltip-groups p strong {
   overflow: hidden;
-  color: #b3b7c1;
+  color: var(--text-secondary, #b3b7c1);
   font-weight: 540;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -891,7 +891,7 @@ function inspectWithKeyboard(index: number): void {
 
 .tooltip-groups p span {
   flex: 0 0 auto;
-  color: #737986;
+  color: var(--text-muted, #737986);
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-variant-numeric: tabular-nums;
 }
@@ -899,7 +899,7 @@ function inspectWithKeyboard(index: number): void {
 .tooltip-groups .tooltip-empty {
   display: block;
   min-height: 21px;
-  color: #5d626d;
+  color: var(--text-faint, #5d626d);
 }
 
 .tooltip-fade-enter-active,
