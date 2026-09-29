@@ -99,9 +99,11 @@ tokenpulse logout
 
 Agent 默认只上传 Token Usage Metadata，不上传 Prompt、AI Response、源码、文件内容、Git diff 或仓库内容。
 
-Codex 与 Claude Code 使用已验证的 JSONL Token 字段。Cursor 以只读方式查询
-`cursorDiskKV`，只选择明确的 `tokenCount`、模型、时间和稳定 ID；当前 Cursor
-版本若未在本地公开非零 Token 字段，Agent 会给出 diagnostics，不会根据聊天正文估算或上传内容。
+Codex 与 Claude Code（包括 Claude Desktop 内置的 Claude Code）使用已验证的 JSONL
+Token 字段。Claude Desktop 的会话目录会自动发现，不会扫描桌面端的 audit 日志、缓存或
+其他应用文件。Cursor 以只读方式查询 `cursorDiskKV`，只选择明确的 `tokenCount`、模型、
+时间和稳定 ID；当前 Cursor 版本若未在本地公开非零 Token 字段，Agent 会给出 diagnostics，
+不会根据聊天正文估算或上传内容。
 
 ## Auto Submit
 
